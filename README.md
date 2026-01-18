@@ -15,10 +15,12 @@ Use 2 digits for [VERSION]
 ## Hardware & Fastener Standards
 
 ### Approved Fasteners
-Only M2, M3, M4, and M5 metric fasteners are permitted in all designs.
-IF a fastner is a screw, use philips.
-IF a custom fastner is designed, use that instead.
+Only M2, M3, M4, and M5 metric fasteners are permitted in all designs.  
+IF a fastner is a screw, use philips.  
+IF a custom fastner is designed, use that instead.  
 
+NOTE:
+when making custom fastners DO NOT SAVE THEM AS TOOLBOX PARTS, save them as a custom part. This allows them to render properly upon loading on a different computer
 ## CAD Configuration Standards
 
 ### Units
