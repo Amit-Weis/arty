@@ -1,0 +1,3 @@
+[submodule "arty-pi"]
+	path = arty-pi
+	url = https://github.com/Amit-Weis/arty-pi
