@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companion Robot Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e8f4f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Animated shapes */
+        .shape {
+            position: fixed;
+            border-radius: 50%;
+            z-index: 0;
+        }
+        
+        .shape-top {
+            top: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: #d4916f;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .shape-bottom {
+            bottom: 40px;
+            right: 40px;
+            width: 90px;
+            height: 90px;
+            background: #d4916f;
+            animation: float-reverse 10s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10px, -10px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, -20px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-10px, -10px) rotate(270deg);
+            }
+        }
+        
+        @keyframes float-reverse {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(-15px, 15px) rotate(-90deg);
+            }
+            50% {
+                transform: translate(0, 30px) rotate(-180deg);
+            }
+            75% {
+                transform: translate(15px, 15px) rotate(-270deg);
+            }
+        }
+        
+        .container {
+            background: #f5f9fb;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-width: 550px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3e50;
+            margin-bottom: 8px;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #d4916f;
+            margin-bottom: 35px;
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .status {
+            background: #e3f0f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .status-label {
+            font-size: 11px;
+            color: #5a7a8c;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .status-label:hover {
+            color: #d4916f;
+        }
+        
+        .status-value {
+            font-size: 22px;
+            font-weight: 500;
+            color: #2d3e50;
+        }
+        
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .mode-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8c4b0, #d9b09c);
+            color: #2d3e50;
+            aspect-ratio: 1;
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .mode-btn:active {
+            transform: translateY(0);
+        }
+        
+        .mode-btn.active {
+            transform: scale(0.96);
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .control-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.3px;
+            background: linear-gradient(135deg, #e8c4b0, #d9b09c);
+            color: #2d3e50;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .mute-btn.muted {
+            background: linear-gradient(135deg, #5a7a8c, #4a6a7c);
+            color: #f5f9fb;
+        }
+        
+        .indicator {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .indicator.on {
+            background: #6ba8c4;
+        }
+        
+        .indicator.off {
+            background: #5a7a8c;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* About page styles */
+        .about-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .about-overlay.show {
+            display: flex;
+        }
+        
+        .about-content {
+            background: #f5f9fb;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .about-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #5a7a8c;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+        
+        .about-close:hover {
+            color: #d4916f;
+        }
+        
+        .about-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3e50;
+            margin-bottom: 20px;
+        }
+        
+        .about-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #5a7a8c;
+            margin-bottom: 25px;
+        }
+        
+        .about-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .about-btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8c4b0, #d9b09c);
+            color: #2d3e50;
+        }
+        
+        .about-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="shape shape-top"></div>
+    <div class="shape shape-bottom"></div>
+    
+    <div class="container">
+        <h1>ARTY</h1>
+        <p class="subtitle">ElevaitLabs</p>
+        
+        <div class="status">
+            <div class="status-label" onclick="showAbout()">made by Alexander Loker</div>
+            <div class="status-value">
+                <span class="indicator on"></span>
+                <span id="statusText">Standard Mode</span>
+            </div>
+        </div>
+        
+        <div class="mode-grid">
+            <button class="mode-btn" onclick="setMode('Active')">
+                Active
+            </button>
+            <button class="mode-btn active" onclick="setMode('Standard')">
+                Standard
+            </button>
+            <button class="mode-btn" onclick="setMode('Mellow')">
+                Mellow
+            </button>
+            <button class="mode-btn" onclick="setMode('Stationary')">
+                Stationary
+            </button>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="control-btn" id="powerBtn" onclick="togglePower()">
+                Power Down
+            </button>
+            <button class="control-btn" id="muteBtn" onclick="toggleMute()">
+                Deafen
+            </button>
+        </div>
+    </div>
+    
+    <!-- About Page Overlay -->
+    <div class="about-overlay" id="aboutOverlay">
+        <div class="about-content">
+            <span class="about-close" onclick="hideAbout()">&times;</span>
+            <div class="about-title">About Arty</div>
+            <div class="about-text">
+                Arty is a companion robot project designed to bring intelligent interaction and personality into everyday life. Built with care and innovation, Arty represents the next step in personal robotics, combining responsive behavior modes with an intuitive control interface. This project is a labor of love, exploring the boundaries of what companion robots can be.
+            </div>
+            <div class="about-buttons">
+                <a href="https://www.alexloker.com/" target="_blank" class="about-btn">More About Creator</a>
+                <a href="https://www.elevaitlabs.ai/" target="_blank" class="about-btn">ElevaitLabs</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMode = 'Standard';
+        let isPoweredOn = true;
+        let isMuted = false;
+        
+        function setMode(mode) {
+            if (!isPoweredOn) return;
+            
+            currentMode = mode;
+            
+            // Remove active class from all mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Update status text
+            document.getElementById('statusText').textContent = mode + ' Mode';
+            
+            console.log('Mode changed to:', mode);
+            // TODO: Send mode change command to robot
+        }
+        
+        function togglePower() {
+            isPoweredOn = !isPoweredOn;
+            const statusText = document.getElementById('statusText');
+            const indicator = document.querySelector('.indicator');
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            const powerBtn = document.getElementById('powerBtn');
+            
+            if (!isPoweredOn) {
+                statusText.textContent = 'Sleeping';
+                indicator.classList.remove('on');
+                indicator.classList.add('off');
+                modeButtons.forEach(btn => btn.style.opacity = '0.5');
+                powerBtn.textContent = 'Power On';
+                console.log('Robot powered OFF');
+                // TODO: Send power off command to robot
+            } else {
+                statusText.textContent = currentMode + ' Mode';
+                indicator.classList.remove('off');
+                indicator.classList.add('on');
+                modeButtons.forEach(btn => btn.style.opacity = '1');
+                powerBtn.textContent = 'Power Down';
+                console.log('Robot powered ON');
+                // TODO: Send power on command to robot
+            }
+        }
+        
+        function toggleMute() {
+            if (!isPoweredOn) return;
+            
+            isMuted = !isMuted;
+            const muteBtn = document.getElementById('muteBtn');
+            
+            if (isMuted) {
+                muteBtn.classList.add('muted');
+                muteBtn.textContent = 'Undeafen';
+                console.log('Robot muted');
+                // TODO: Send mute command to robot
+            } else {
+                muteBtn.classList.remove('muted');
+                muteBtn.textContent = 'Deafen';
+                console.log('Robot unmuted');
+                // TODO: Send unmute command to robot
+            }
+        }
+        
+        function showAbout() {
+            document.getElementById('aboutOverlay').classList.add('show');
+        }
+        
+        function hideAbout() {
+            document.getElementById('aboutOverlay').classList.remove('show');
+        }
+        
+        // Close about overlay when clicking outside the content
+        document.addEventListener('click', function(event) {
+            const overlay = document.getElementById('aboutOverlay');
+            if (event.target === overlay) {
+                hideAbout();
+            }
+        });
+    </script>
+</body>
+</html>
